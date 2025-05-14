@@ -108,7 +108,6 @@ class AuthService {
     return {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
       maxAge: this.cookieMaxAge,
     };
   }
