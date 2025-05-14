@@ -45,7 +45,7 @@ class AuthService {
   }
 
   // Créer un utilisateur
-  async createUser(name, email, password) {
+  async createUser(name, email, password, role = null) {
     // Vérifier si l'email existe déjà
     if (await this.isEmailTaken(email)) {
       throw new Error(apiResponseCode.EMAIL_ALREADY_EXISTS);
@@ -59,7 +59,7 @@ class AuthService {
         nom: name,
         email,
         mot_de_passe_hash: hashedPassword,
-        role: "parent",
+        role: role ?? "parent",
       },
     });
 

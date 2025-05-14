@@ -5,7 +5,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 
 const app = express();
-
+import userRoute from "./src/routes/user.route.js";
 import authRoute from "./src/routes/auth.route.js";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -33,6 +33,7 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 
 app.use("/auth", authRoute);
+app.use("/users", userRoute);
 
 app.get("/", (req, res) => {
   console.log("Requête reçue sur la route principale");
