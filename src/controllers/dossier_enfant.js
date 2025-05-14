@@ -186,4 +186,6 @@ const soumissionDossierEnfant = async (req, res) => {
   }
 };
 
-export default { soumissionDossierEnfant };
+const getAllDossiersEnfants = async((req, res) => {});
+
+export default { soumissionDossierEnfant, getAllDossiersEnfants };

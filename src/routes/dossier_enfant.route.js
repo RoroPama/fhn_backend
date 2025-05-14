@@ -3,6 +3,7 @@ import { schemaValidate } from "../middlewares/validator.js";
 import { dossier_enfantSchema } from "../framework-core/validators/enfant_dossier.schema.js";
 import dossier_enfantController from "./../controllers/dossier_enfant.js";
 import upload_files from "../middlewares/upload_files.js";
+import { verifyToken } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -15,3 +16,5 @@ router.post(
 );
 
 export default router;
+
+router.get("/", verifyToken, dossier_enfantController.getAllDossiersEnfants);

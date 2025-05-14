@@ -20,7 +20,7 @@ const register = async (req, res) => {
     return sendResponse(res, {
       message: "Compte créé avec succès",
       httpCode: httpStatus.CREATED,
-      data: { name: user.nom, email: user.email, role: user.role },
+      data: { name: user.nom, email: user.email, role: user.role, token },
     });
   } catch (error) {
     console.error("Erreur lors de la création du compte:", error);
@@ -56,7 +56,7 @@ const login = async (req, res) => {
     return sendResponse(res, {
       message: "Connexion réussie",
       httpCode: httpStatus.OK,
-      data: { nom: user.nom, email: user.email, role: user.role },
+      data: { nom: user.nom, email: user.email, role: user.role, token },
     });
   } catch (error) {
     console.error("Erreur lors de la connexion:", error);
