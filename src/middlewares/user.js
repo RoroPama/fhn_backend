@@ -1,6 +1,6 @@
-import apiResponseCode from "../framework-core/http/api-response-code";
-import httpStatus from "../framework-core/http/http-status";
-import sendResponse from "../framework-core/http/response";
+import apiResponseCode from "../framework-core/http/api-response-code.js";
+import httpStatus from "../framework-core/http/http-status.js";
+import sendResponse from "../framework-core/http/response.js";
 
 export const requireAdmin = async (req, res, next) => {
   try {

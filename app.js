@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 const app = express();
 import userRoute from "./src/routes/user.route.js";
 import authRoute from "./src/routes/auth.route.js";
+import dossier_enfantRoute from "./src/routes/dossier_enfant.route.js";
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -34,7 +35,7 @@ app.use(cookieParser());
 
 app.use("/auth", authRoute);
 app.use("/users", userRoute);
-
+app.use("/dossier_enfant", dossier_enfantRoute);
 app.get("/", (req, res) => {
   console.log("Requête reçue sur la route principale");
   res.status(200).json({

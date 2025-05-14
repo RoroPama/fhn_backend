@@ -1,0 +1,86 @@
+import Joi from "joi";
+
+export const dossier_enfantSchema = Joi.object({
+  // Informations de base de l'enfant
+  nom: Joi.string().required().messages({
+    "any.required": "Le nom est requis",
+    "string.empty": "Le nom ne peut pas être vide",
+  }),
+  date_naissance: Joi.date().required().messages({
+    "any.required": "La date de naissance est requise",
+    "date.base": "La date de naissance doit être une date valide",
+  }),
+  sexe: Joi.string().valid("M", "F").required().messages({
+    "any.only": 'Le sexe doit être "M" ou "F"',
+    "any.required": "Le sexe est requis",
+  }),
+  commune: Joi.string().required(),
+  diagnostic: Joi.string().required(),
+  parentNom: Joi.string().required(),
+  parentTelephone: Joi.string().required(),
+  parentEmail: Joi.string().email().required(),
+  date_creation: Joi.date().required(),
+  activites_quotidiennes: Joi.string().allow("", null),
+  ancien_etablissement: Joi.string().allow("", null),
+  est_scolarise: Joi.boolean().required(),
+  niveau_scolaire: Joi.string().allow("", null),
+
+  // etablissementId doit être 1 ou 2
+  etablissementId: Joi.number().valid(1, 2).required().messages({
+    "any.only": "L'établissement doit être 1 ou 2",
+    "any.required": "L'établissement est requis",
+  }),
+
+  // Parcours médical tarii
+  suivi_orthophonique: Joi.boolean().when("etablissementId", {
+    is: 1,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+  suivi_psychologique: Joi.boolean().when("etablissementId", {
+    is: 1,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+  psychomotricien: Joi.boolean().when("etablissementId", {
+    is: 1,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+  tradipracticien: Joi.boolean().when("etablissementId", {
+    is: 1,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+
+  // Parcours médical wisi
+  a_consulte_ophtalmo: Joi.boolean().when("etablissementId", {
+    is: 2,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+  a_autre_suivi_medical: Joi.boolean().when("etablissementId", {
+    is: 2,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+  details_suivi_medical: Joi.string().allow("", null).when("etablissementId", {
+    is: 2,
+    then: Joi.optional(),
+    otherwise: Joi.forbidden(),
+  }),
+  a_perception_visuelle: Joi.boolean().when("etablissementId", {
+    is: 2,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+  est_aveugle: Joi.boolean().when("etablissementId", {
+    is: 2,
+    then: Joi.required(),
+    otherwise: Joi.forbidden(),
+  }),
+
+  // Champs communs aux deux parcours
+  attente: Joi.string().allow("", null),
+  observation: Joi.string().allow("", null),
+}).required();

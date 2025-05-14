@@ -2,7 +2,6 @@ import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
 import authService from "../services/auth.service.js";
-import userService from "../services/user.service.js";
 
 const createUserWithRole = async (req, res) => {
   try {
