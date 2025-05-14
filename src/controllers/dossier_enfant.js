@@ -186,6 +186,87 @@ const soumissionDossierEnfant = async (req, res) => {
   }
 };
 
-const getAllDossiersEnfants = async((req, res) => {});
+const getAllDossiersEnfants = async (req, res) => {
+  try {
+    // Récupérer tous les dossiers avec leurs relations
+    const dossiers = await prisma.dossier.findMany({
+      include: {
+        enfant: true,
+        utilisateur: true,
+        documents: {
+          include: {
+            nature: true, // Si vous avez une relation avec nature
+          },
+        },
+        // Inclure les deux types de parcours médicaux pour récupérer les observations
+        parcoursMedicalTARII: true,
+        parcoursMedicalWiSi: true,
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
 
+    // Formater les données selon le format souhaité
+    const dossiersFormattees = dossiers.map((dossier) => {
+      // Déterminer les observations selon le type de parcours médical
+      const observations = [];
+
+      if (dossier.parcoursMedicalTARII?.[0]) {
+        const parcours = dossier.parcoursMedicalTARII[0];
+        if (parcours.observation) {
+          observations.push(parcours.observation);
+        }
+      } else if (dossier.parcoursMedicalWiSi?.[0]) {
+        const parcours = dossier.parcoursMedicalWiSi[0];
+        if (parcours.observation) {
+          observations.push(parcours.observation);
+        }
+      }
+
+      // Formater les documents
+      const documents = dossier.documents.map((doc) => ({
+        id: doc.id,
+        nomFichier: doc.nomFichier,
+        url: doc.url,
+        nature: doc.nature?.nom || "Non spécifié",
+        dateUpload: doc.created_at,
+      }));
+
+      return {
+        id: dossier.id,
+        nom: dossier.enfant.nom,
+        dateNaissance: dossier.enfant.date_naissance
+          .toISOString()
+          .split("T")[0],
+        sexe: dossier.enfant.sexe,
+        commune: dossier.enfant.commune,
+        parent: {
+          nom: dossier.enfant.parentNom,
+          telephone: dossier.enfant.parentTelephone,
+          email: dossier.enfant.parentEmail,
+        },
+        statutDossier: dossier.statut_dossier,
+        dateCreation: dossier.created_at.toISOString(),
+        utilisateurCreateur: dossier.utilisateur?.nom || "Inconnu",
+        observations,
+        documents,
+      };
+    });
+
+    return sendResponse(res, {
+      httpCode: httpStatus.OK,
+      message: "Dossiers récupérés avec succès",
+      data: dossiersFormattees,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des dossiers:", error);
+
+    return sendResponse(res, {
+      httpCode: httpStatus.INTERNAL_SERVER_ERROR,
+      message: "Une erreur est survenue lors de la récupération des dossiers",
+      errorCode: apiResponseCode.SERVER_ERROR,
+    });
+  }
+};
 export default { soumissionDossierEnfant, getAllDossiersEnfants };
