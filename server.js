@@ -1,5 +1,6 @@
-const app = require("./app");
-const { appConfig } = require("./src/config/app.config");
+import app from "./app.js";
+
+import appConfig from "./src/config/app.config.js";
 
 const port = appConfig.port;
 // Démarrage du serveur
@@ -21,4 +22,4 @@ process.on("unhandledRejection", (err) => {
   });
 });
 
-module.exports = server;
+export default server;
