@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
-    const subDir = path.join(uploadDir, year.toString(), month);
+    const subDir = path.join(uploadDir);
 
     if (!fs.existsSync(subDir)) {
       fs.mkdirSync(subDir, { recursive: true });
@@ -30,11 +30,22 @@ const storage = multer.diskStorage({
     cb(null, subDir);
   },
   filename: (req, file, cb) => {
-    // Générer un nom unique pour éviter les conflits
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    // Format: YYYYMMDD-HHMMSS-ms
+    const now = new Date();
+    const timestamp = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+      "-",
+      String(now.getHours()).padStart(2, "0"),
+      String(now.getMinutes()).padStart(2, "0"),
+      String(now.getSeconds()).padStart(2, "0"),
+      "-",
+      String(now.getMilliseconds()).padStart(3, "0"),
+    ].join("");
+
     const ext = path.extname(file.originalname);
-    const name = path.basename(file.originalname, ext);
-    cb(null, `${name}-${uniqueSuffix}${ext}`);
+    cb(null, `${timestamp}${ext}`);
   },
 });
 
