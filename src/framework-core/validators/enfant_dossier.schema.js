@@ -83,4 +83,34 @@ export const dossier_enfantSchema = Joi.object({
   // Champs communs aux deux parcours
   attente: Joi.string().allow("", null),
   observation: Joi.string().allow("", null),
-}).required();
+
+  // Informations sur les fichiers
+  filesInfo: Joi.alternatives()
+    .try(
+      // Cas où c'est une chaîne JSON
+      Joi.string().custom((value, helpers) => {
+        try {
+          const parsed = JSON.parse(value);
+          if (!Array.isArray(parsed)) {
+            return helpers.error("any.invalid");
+          }
+          return parsed;
+        } catch {
+          return helpers.error("any.invalid");
+        }
+      }),
+      // Cas où c'est déjà un tableau
+      Joi.array().items(
+        Joi.object({
+          natureId: Joi.string().required().messages({
+            "any.required": "L'ID de la nature du fichier est requis",
+          }),
+        })
+      )
+    )
+    .optional()
+    .messages({
+      "any.invalid":
+        "filesInfo doit être un tableau valide d'objets avec natureId",
+    }),
+});

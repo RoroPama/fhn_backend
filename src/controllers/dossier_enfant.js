@@ -3,10 +3,12 @@ import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
 import Constants from "../shared/constants.js";
+import fs from "fs";
 
 const soumissionDossierEnfant = async (req, res) => {
   try {
     const utilisateurId = "0ece4a19-8a18-49ab-82ca-d47b0563222d";
+
     const {
       // Informations de base de l'enfant
       nom,
@@ -18,7 +20,6 @@ const soumissionDossierEnfant = async (req, res) => {
       parentTelephone,
       parentEmail,
       date_creation,
-
       est_scolarise,
       niveau_scolaire,
       ancien_etablissement,
@@ -41,7 +42,14 @@ const soumissionDossierEnfant = async (req, res) => {
       details_suivi_medical,
       a_perception_visuelle,
       est_aveugle,
+
+      // Informations sur les fichiers
+      filesInfo, // Array d'objets contenant { natureId } pour chaque fichier
     } = req.body;
+
+    // Parse filesInfo si c'est une chaîne JSON
+    const filesInfoArray =
+      typeof filesInfo === "string" ? JSON.parse(filesInfo) : filesInfo;
 
     // Utiliser une transaction pour garantir l'intégrité des données
     const result = await prisma.$transaction(async (prisma) => {
@@ -114,7 +122,41 @@ const soumissionDossierEnfant = async (req, res) => {
         });
       }
 
-      return { enfant, dossier };
+      // 4. Gérer les fichiers uploadés
+      const documents = [];
+      if (req.files && req.files.length > 0) {
+        // Vérifier que nous avons les informations pour chaque fichier
+        if (!filesInfoArray || filesInfoArray.length !== req.files.length) {
+          throw new Error(
+            "Les informations des fichiers ne correspondent pas aux fichiers uploadés"
+          );
+        }
+
+        for (let i = 0; i < req.files.length; i++) {
+          const file = req.files[i];
+          const fileInfo = filesInfoArray[i];
+
+          // Construire l'URL relative du fichier
+          const date = new Date();
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const relativeUrl = `/uploads/${year}/${month}/${file.filename}`;
+
+          // Créer l'entrée Document dans la base de données
+          const document = await prisma.document.create({
+            data: {
+              dossierId: dossier.id,
+              natureId: fileInfo.natureId,
+              nomFichier: file.originalname,
+              url: relativeUrl,
+            },
+          });
+
+          documents.push(document);
+        }
+      }
+
+      return { enfant, dossier, documents };
     });
 
     return sendResponse(res, {
@@ -123,15 +165,25 @@ const soumissionDossierEnfant = async (req, res) => {
       data: result,
     });
   } catch (error) {
+    console.error("Erreur lors de la création du dossier:", error);
+
+    // En cas d'erreur, supprimer les fichiers uploadés
+    if (req.files) {
+      req.files.forEach((file) => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+    }
+
     return sendResponse(res, {
       httpCode: httpStatus.INTERNAL_SERVER_ERROR,
-      message: "Une erreur est survenue lors de la création du dossier",
+      message:
+        error.message ||
+        "Une erreur est survenue lors de la création du dossier",
       errorCode: apiResponseCode.SERVER_ERROR,
-      data: result,
     });
   }
 };
 
-export default {
-  soumissionDossierEnfant,
-};
+export default { soumissionDossierEnfant };
