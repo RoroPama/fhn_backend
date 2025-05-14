@@ -45,6 +45,9 @@ model ParcoursMedicalWiSi {
   est_aveugle             Boolean
   attente                 String
   observation             String
+  dossierId  String
+   dossier    Dossier   @relation(fields: [dossierId], references: [id])
+
 }
 
 model ParcoursMedicalTARII {
@@ -55,6 +58,9 @@ model ParcoursMedicalTARII {
   tradipracticien        Boolean
   attente                 String
   observation             String
+   dossierId  String
+   dossier    Dossier   @relation(fields: [dossierId], references: [id])
+
 }
 
 
@@ -82,6 +88,8 @@ model Dossier {
   statut_dossier   Statut
   documents        Document[]
   observations     Observation[]
+  ParcoursMedicalTARII     ParcoursMedicalTARII[]
+  ParcoursMedicalWiSi   ParcoursMedicalWiSi[]
   etablissementId String
   etablissement    Etablissement @relation(fields: [etablissementId], references: [id])
 }
