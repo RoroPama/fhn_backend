@@ -17,10 +17,8 @@ class AuthService {
 
   // Vérifier si un email existe déjà
   async isEmailTaken(email) {
-    // TODO: Implémenter la vérification dans la base de données
-    // Exemple: const user = await User.findOne({ email });
-    // return !!user;
-    return false; // Placeholder
+    const user = await prisma.user.findUnique({ where: { email } });
+    return !!user;
   }
 
   // Valider le format de l'email
