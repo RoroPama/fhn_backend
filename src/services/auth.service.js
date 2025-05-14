@@ -66,6 +66,40 @@ class AuthService {
     return user;
   }
 
+  async login(email, password) {
+    // Valider les données
+    if (!this.validateEmail(email)) {
+      throw new Error("Format d'email invalide");
+    }
+
+    if (!this.validatePassword(password)) {
+      throw new Error("Le mot de passe doit contenir au moins 8 caractères");
+    }
+
+    // Vérifier si l'utilisateur existe
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new Error("Email ou mot de passe incorrect");
+    }
+
+    // Vérifier le mot de passe
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.mot_de_passe_hash
+    );
+
+    if (!isPasswordValid) {
+      throw new Error("Email ou mot de passe incorrect");
+    }
+
+    const { mot_de_passe_hash, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
+  }
+
   // Générer un JWT
   generateToken(userId, email) {
     const payload = {
