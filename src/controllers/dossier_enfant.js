@@ -192,18 +192,13 @@ const getAllDossiersEnfants = async (req, res) => {
     const dossiers = await prisma.dossier.findMany({
       include: {
         enfant: true,
-        utilisateur: true,
-        documents: {
-          include: {
-            nature: true, // Si vous avez une relation avec nature
-          },
-        },
-        // Inclure les deux types de parcours médicaux pour récupérer les observations
-        parcoursMedicalTARII: true,
-        parcoursMedicalWiSi: true,
+        documents: true,
+        ParcoursMedicalTARII: true,
+        ParcoursMedicalWiSi: true,
+        etablissement: true,
       },
       orderBy: {
-        created_at: "desc",
+        id: "desc", // Trier par ID décroissant
       },
     });
 
@@ -212,13 +207,13 @@ const getAllDossiersEnfants = async (req, res) => {
       // Déterminer les observations selon le type de parcours médical
       const observations = [];
 
-      if (dossier.parcoursMedicalTARII?.[0]) {
-        const parcours = dossier.parcoursMedicalTARII[0];
+      if (dossier.ParcoursMedicalTARII?.length > 0) {
+        const parcours = dossier.ParcoursMedicalTARII[0];
         if (parcours.observation) {
           observations.push(parcours.observation);
         }
-      } else if (dossier.parcoursMedicalWiSi?.[0]) {
-        const parcours = dossier.parcoursMedicalWiSi[0];
+      } else if (dossier.ParcoursMedicalWiSi?.length > 0) {
+        const parcours = dossier.ParcoursMedicalWiSi[0];
         if (parcours.observation) {
           observations.push(parcours.observation);
         }
@@ -229,8 +224,8 @@ const getAllDossiersEnfants = async (req, res) => {
         id: doc.id,
         nomFichier: doc.nomFichier,
         url: doc.url,
-        nature: doc.nature?.nom || "Non spécifié",
-        dateUpload: doc.created_at,
+        nature: doc.natureId,
+        dateUpload: doc.uploadDate || new Date().toISOString(),
       }));
 
       return {
@@ -247,8 +242,8 @@ const getAllDossiersEnfants = async (req, res) => {
           email: dossier.enfant.parentEmail,
         },
         statutDossier: dossier.statut_dossier,
-        dateCreation: dossier.created_at.toISOString(),
-        utilisateurCreateur: dossier.utilisateur?.nom || "Inconnu",
+        dateCreation: dossier.enfant.date_creation.toISOString(),
+        utilisateurCreateur: dossier.enfant.utilisateurId || "Inconnu",
         observations,
         documents,
       };
