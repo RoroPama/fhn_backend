@@ -1,4 +1,3 @@
-import { response } from "express";
 import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
@@ -42,6 +41,44 @@ const register = async (req, res) => {
   }
 };
 
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await authService.login(email, password);
+
+    // Générer le token JWT
+    const token = authService.generateToken(user.id, user.email);
+
+    // Définir le cookie
+    res.cookie("authToken", token, authService.getCookieOptions());
+
+    return sendResponse(res, {
+      message: "Connexion réussie",
+      httpCode: httpStatus.OK,
+      data: { userId: user.id, email: user.email, role: user.role },
+    });
+  } catch (error) {
+    console.error("Erreur lors de la connexion:", error);
+
+    // Gérer les erreurs spécifiques
+    if (error.message === apiResponseCode.EMAIL_PASSWORD_INCORRECT) {
+      return sendResponse(res, {
+        message: "Email ou mot de passe incorrect",
+        httpCode: httpStatus.UNAUTHORIZED,
+        errorCode: apiResponseCode.EMAIL_PASSWORD_INCORRECT,
+      });
+    }
+
+    return sendResponse(res, {
+      message: "Erreur lors de la connexion",
+      httpCode: httpStatus.INTERNAL_SERVER_ERROR,
+      errorCode: apiResponseCode.SERVER_ERROR,
+    });
+  }
+};
+
 export default {
   register,
+  login,
 };

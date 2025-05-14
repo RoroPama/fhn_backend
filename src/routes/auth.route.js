@@ -1,7 +1,10 @@
 import express from "express";
 import authController from "../controllers/auth.controller.js";
 import { schemaValidate } from "../middlewares/validator.js";
-import { registerSchema } from "../framework-core/validators/auth.schema.js";
+import {
+  loginSchema,
+  registerSchema,
+} from "../framework-core/validators/auth.schema.js";
 
 const router = express.Router();
 
@@ -10,6 +13,13 @@ router.post(
   "/register",
   schemaValidate(registerSchema),
   authController.register
+);
+
+router.post(
+  "/login",
+  schemaValidate(loginSchema),
+
+  authController.login
 );
 
 export default router;

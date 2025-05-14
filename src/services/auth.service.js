@@ -66,6 +66,31 @@ class AuthService {
     return user;
   }
 
+  async login(email, password) {
+    // Vérifier si l'utilisateur existe
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new Error(apiResponseCode.EMAIL_PASSWORD_INCORRECT);
+    }
+
+    // Vérifier le mot de passe
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.mot_de_passe_hash
+    );
+
+    if (!isPasswordValid) {
+      throw new Error(apiResponseCode.EMAIL_PASSWORD_INCORRECT);
+    }
+
+    const { mot_de_passe_hash, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
+  }
+
   // Générer un JWT
   generateToken(userId, email) {
     const payload = {
