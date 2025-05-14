@@ -7,7 +7,7 @@ class AuthService {
     this.saltRounds = appConfig.bcrypt.saltRounds;
     this.jwtSecret = appConfig.jwt.secret;
     this.jwtExpiresIn = "24h";
-    this.cookieMaxAge = appConfig.jwt.cookieMaxAge; // 24 heures
+    this.cookieMaxAge = appConfig.jwt.cookieMaxAge;
   }
 
   // Hacher le mot de passe
