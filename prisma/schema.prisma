@@ -6,10 +6,77 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  // output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model Enfant {
+  id               String   @id @default(uuid())
+  nom              String
+  date_naissance   DateTime
+  sexe             String
+  commune          String
+  statut_dossier   Statut
+  diagnostic       String?
+  dossier         Dossier[]
+  parentNom        String
+  parentTelephone  String
+  parentEmail      String
+  date_creation    DateTime @default(now())
+  utilisateurId    String
+  utilisateur      User @relation(fields: [utilisateurId], references: [id])
+}
+
+model Dossier {
+  id        String   @id @default(uuid())
+  enfantId  String
+  enfant    Enfant   @relation(fields: [enfantId], references: [id])
+  documents        Document[]
+  observations     Observation[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  nom       String
+  email     String   @unique
+  mot_de_passe_hash String
+  role      Role
+  enfants   Enfant[]
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  dossierId String
+  dossier   Dossier  @relation(fields: [dossierId], references: [id])
+  nomFichier String
+  url       String
+}
+
+model Observation {
+  id        String   @id @default(uuid())
+  dossierId String
+  dossier   Dossier  @relation(fields: [dossierId], references: [id])
+  contenu   String
+  auteur    String
+  date      DateTime @default(now())
+}
+
+enum Role {
+  parent
+  secretaire
+  analyste
+  admin
+}
+
+enum Statut {
+  Nouveau
+  En_cours
+  Incomplet
+  Accepte
+  Rejete
+  Cloture
 }
