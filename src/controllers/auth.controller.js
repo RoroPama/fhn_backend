@@ -78,7 +78,16 @@ const login = async (req, res) => {
   }
 };
 
+const checkAuth = async (req, res) => {
+  return sendResponse(res, {
+    message: "Utilisateur authentifié",
+    httpCode: httpStatus.OK,
+    data: { userId: req.user.userId, email: req.user.email },
+  });
+};
+
 export default {
   register,
   login,
+  checkAuth,
 };

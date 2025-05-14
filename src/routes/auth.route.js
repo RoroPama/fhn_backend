@@ -5,6 +5,7 @@ import {
   loginSchema,
   registerSchema,
 } from "../framework-core/validators/auth.schema.js";
+import { verifyToken } from "../middlewares/auth.js";
 
 const router = express.Router();
 
@@ -21,5 +22,7 @@ router.post(
 
   authController.login
 );
+
+router.get("/checkAuth", verifyToken, authController.checkAuth);
 
 export default router;
