@@ -26,9 +26,54 @@ model Enfant {
   parentNom        String
   parentTelephone  String
   parentEmail      String
+
+  est_scolarise           Boolean
+  niveau_scolaire         String?
+  ancien_etablissement    String?
+  activites_quotidiennes  String?
+
   date_creation    DateTime @default(now())
   utilisateurId    String
   utilisateur      User @relation(fields: [utilisateurId], references: [id])
+}
+
+model ParcoursMedicalWiSi {
+  id String @id @default(uuid())
+  a_consulte_ophtalmo     Boolean
+  a_autre_suivi_medical   Boolean
+  details_suivi_medical   String?
+  a_perception_visuelle   Boolean
+  est_aveugle             Boolean
+  attente                 String
+  observation             String
+}
+
+model ParcoursMedicalTARII {
+  id String @id @default(uuid())
+  suivi_orthophonique     Boolean
+  suivi_psychologique     Boolean
+  psychomotricien        Boolean
+  tradipracticien        Boolean
+  attente                 String
+  observation             String
+}
+
+
+
+model Nature {
+  id String @id @default(uuid())
+  nom String
+  etablissementId String
+  etablissement Etablissement @relation(fields: [etablissementId], references: [id])
+  Document    Document[]
+}
+
+model Etablissement {
+  id        String   @id @default(uuid())
+  libelle   String  @unique
+  dossier   Dossier[]
+  nature    Nature[]
+  
 }
 
 model Dossier {
@@ -37,6 +82,8 @@ model Dossier {
   enfant    Enfant   @relation(fields: [enfantId], references: [id])
   documents        Document[]
   observations     Observation[]
+  etablissementId String
+  etablissement    Etablissement @relation(fields: [etablissementId], references: [id])
 }
 
 model User {
@@ -46,12 +93,15 @@ model User {
   mot_de_passe_hash String
   role      Role
   enfants   Enfant[]
+  observations Observation[]
 }
 
 model Document {
   id        String   @id @default(uuid())
   dossierId String
   dossier   Dossier  @relation(fields: [dossierId], references: [id])
+  natureId String
+  nature  Nature  @relation(fields: [natureId], references: [id])
   nomFichier String
   url       String
 }
@@ -61,7 +111,8 @@ model Observation {
   dossierId String
   dossier   Dossier  @relation(fields: [dossierId], references: [id])
   contenu   String
-  auteur    String
+  auteurId String
+  auteur    User     @relation(fields: [auteurId], references: [id])    
   date      DateTime @default(now())
 }
 
