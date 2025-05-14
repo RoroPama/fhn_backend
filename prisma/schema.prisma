@@ -20,7 +20,6 @@ model Enfant {
   date_naissance   DateTime
   sexe             String
   commune          String
-  statut_dossier   Statut
   diagnostic       String?
   dossier         Dossier[]
   parentNom        String
@@ -80,6 +79,7 @@ model Dossier {
   id        String   @id @default(uuid())
   enfantId  String
   enfant    Enfant   @relation(fields: [enfantId], references: [id])
+  statut_dossier   Statut
   documents        Document[]
   observations     Observation[]
   etablissementId String
