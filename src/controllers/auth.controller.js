@@ -20,7 +20,7 @@ const register = async (req, res) => {
     return sendResponse(res, {
       message: "Compte créé avec succès",
       httpCode: httpStatus.CREATED,
-      data: { userId: user.id, email: user.email, role: user.role },
+      data: { name: user.nom, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error("Erreur lors de la création du compte:", error);
