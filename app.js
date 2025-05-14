@@ -12,7 +12,21 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(helmet());
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+    ],
+    credentials: true,
+    maxAge: 86400,
+  })
+);
 
 app.use(morgan("dev"));
 
