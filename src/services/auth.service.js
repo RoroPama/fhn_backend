@@ -1,7 +1,7 @@
 import appConfig from "../config/app.config.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
+import prisma from "../db/prisma.js";
 class AuthService {
   constructor() {
     this.saltRounds = appConfig.bcrypt.saltRounds;
@@ -36,7 +36,7 @@ class AuthService {
   }
 
   // Créer un utilisateur
-  async createUser(email, password) {
+  async createUser(name, email, password) {
     // Valider les données
     if (!this.validateEmail(email)) {
       throw new Error("Format d'email invalide");
@@ -54,20 +54,14 @@ class AuthService {
     // Hacher le mot de passe
     const hashedPassword = await this.hashPassword(password);
 
-    // TODO: Sauvegarder l'utilisateur dans la base de données
-    // Exemple:
-    // const user = await User.create({
-    //   email,
-    //   password: hashedPassword,
-    //   createdAt: new Date()
-    // });
-
-    // Simuler un utilisateur créé
-    const user = {
-      id: Date.now(), // ID temporaire
-      email,
-      createdAt: new Date(),
-    };
+    const user = await prisma.user.create({
+      data: {
+        nom: name,
+        email,
+        mot_de_passe_hash: hashedPassword,
+        role: "parent",
+      },
+    });
 
     return user;
   }

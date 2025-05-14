@@ -15,10 +15,10 @@ const register = async (req, res) => {
     const user = await authService.createUser(name, email, password);
 
     // Générer le token JWT
-    // const token = authService.generateToken(user.id, user.email);
+    const token = authService.generateToken(user.id, user.email);
 
     // Définir le cookie
-    // res.cookie("authToken", token, authService.getCookieOptions());
+    res.cookie("authToken", token, authService.getCookieOptions());
 
     // Répondre avec les informations de l'utilisateur (sans le mot de passe)
     return res.status(201).json({
