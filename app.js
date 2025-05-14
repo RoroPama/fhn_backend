@@ -25,7 +25,6 @@ app.use(
       "Origin",
     ],
     credentials: true,
-    exposedHeaders: ["set-cookie"],
     maxAge: 86400,
   })
 );

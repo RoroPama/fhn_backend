@@ -264,4 +264,13 @@ const getAllDossiersEnfants = async (req, res) => {
     });
   }
 };
-export default { soumissionDossierEnfant, getAllDossiersEnfants };
+
+const changeDossierState = async (req, res) => {
+  const { dossierId, newStatus } = req.body;
+};
+
+export default {
+  soumissionDossierEnfant,
+  getAllDossiersEnfants,
+  changeDossierState,
+};
