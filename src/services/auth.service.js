@@ -2,6 +2,8 @@ import appConfig from "../config/app.config.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../db/prisma.js";
+import apiResponseCode from "../framework-core/http/api-response-code.js";
+
 class AuthService {
   constructor() {
     this.saltRounds = appConfig.bcrypt.saltRounds;
@@ -17,10 +19,17 @@ class AuthService {
 
   // Vérifier si un email existe déjà
   async isEmailTaken(email) {
-    // TODO: Implémenter la vérification dans la base de données
-    // Exemple: const user = await User.findOne({ email });
-    // return !!user;
-    return false; // Placeholder
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          email: email,
+        },
+      });
+      return !!user; // Retourne true si l'user existe, false sinon
+    } catch (error) {
+      console.error("Erreur lors de la vérification de l'email:", error);
+      throw new Error("Erreur lors de la vérification de l'email");
+    }
   }
 
   // Valider le format de l'email
@@ -37,18 +46,9 @@ class AuthService {
 
   // Créer un utilisateur
   async createUser(name, email, password) {
-    // Valider les données
-    if (!this.validateEmail(email)) {
-      throw new Error("Format d'email invalide");
-    }
-
-    if (!this.validatePassword(password)) {
-      throw new Error("Le mot de passe doit contenir au moins 8 caractères");
-    }
-
     // Vérifier si l'email existe déjà
     if (await this.isEmailTaken(email)) {
-      throw new Error("Cet email est déjà utilisé");
+      throw new Error(apiResponseCode.EMAIL_ALREADY_EXISTS);
     }
 
     // Hacher le mot de passe
@@ -88,6 +88,7 @@ class AuthService {
     };
   }
 }
+
 const authService = new AuthService();
 
 export default authService;

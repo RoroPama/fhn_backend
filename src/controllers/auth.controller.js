@@ -1,15 +1,11 @@
+import { response } from "express";
+import apiResponseCode from "../framework-core/http/api-response-code.js";
+import httpStatus from "../framework-core/http/http-status.js";
+import sendResponse from "../framework-core/http/response.js";
 import authService from "../services/auth.service.js";
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
-    // Vérifier que les champs requis sont présents
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Email et mot de passe requis",
-      });
-    }
 
     // Créer l'utilisateur
     const user = await authService.createUser(name, email, password);
@@ -21,40 +17,27 @@ const register = async (req, res) => {
     res.cookie("authToken", token, authService.getCookieOptions());
 
     // Répondre avec les informations de l'utilisateur (sans le mot de passe)
-    return res.status(201).json({
-      success: true,
+
+    return sendResponse(res, {
       message: "Compte créé avec succès",
-      user: {
-        id: user.id,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
+      httpCode: httpStatus.CREATED,
+      data: { userId: user.id, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error("Erreur lors de la création du compte:", error);
 
-    // Gérer les erreurs spécifiques
-    if (error.message === "Cet email est déjà utilisé") {
-      return res.status(409).json({
-        success: false,
-        message: error.message,
+    if (error.message === apiResponseCode.EMAIL_ALREADY_EXISTS) {
+      return sendResponse(res, {
+        message: "Cet email est déjà utilisé",
+        httpCode: httpStatus.CONFLICT,
+        errorCode: apiResponseCode.EMAIL_ALREADY_EXISTS,
       });
     }
 
-    if (
-      error.message.includes("Format d'email invalide") ||
-      error.message.includes("mot de passe")
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: error.message,
-      });
-    }
-
-    // Erreur générale
-    return res.status(500).json({
-      success: false,
+    return sendResponse(res, {
       message: "Erreur lors de la création du compte",
+      httpCode: 500,
+      errorCode: apiResponseCode.SERVER_ERROR,
     });
   }
 };
