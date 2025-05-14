@@ -56,7 +56,7 @@ const login = async (req, res) => {
     return sendResponse(res, {
       message: "Connexion réussie",
       httpCode: httpStatus.OK,
-      data: { userId: user.id, email: user.email, role: user.role },
+      data: { nom: user.nom, email: user.email, role: user.role },
     });
   } catch (error) {
     console.error("Erreur lors de la connexion:", error);
