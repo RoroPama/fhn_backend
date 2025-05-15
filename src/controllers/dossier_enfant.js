@@ -382,6 +382,22 @@ const changeDossierState = async (req, res) => {
       }
     }
 
+    if (
+      newStatus === Constants.statut_dossier.Rejete &&
+      updatedDossier.enfant.parentEmail
+    ) {
+      try {
+        email.emailService.sendNotificationEmail(
+          updatedDossier.enfant.parentEmail,
+          "Le Dossier soumis à la FHN a été rejeté",
+          `Bonjour ${updatedDossier.enfant.parentNom},\n\nNous sommes au regret de vous informer que le dossier de ${updatedDossier.enfant.nom} a été rejeté.\n\nPour plus d'informations sur les raisons de ce refus ou pour connaitre les démarches à suivre, veuillez nous contacter.\n\nCordialement,\nL'équipe FHN`
+        );
+      } catch (emailError) {
+        console.error("Erreur lors de l'envoi de l'email:", emailError);
+        // On ne bloque pas la mise à jour du dossier si l'email échoue
+      }
+    }
+
     // Répondre avec le dossier mis à jour
     return sendResponse(res, {
       message: "Statut du dossier mis à jour avec succès",
