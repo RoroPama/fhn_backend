@@ -1,6 +1,8 @@
+import prisma from "../db/prisma.js";
 import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
+import Constants from "../shared/constants.js";
 
 export const requireAdmin = async (req, res, next) => {
   try {
@@ -23,10 +25,12 @@ export const requireAdmin = async (req, res, next) => {
     }
 
     req.user.role = user.role;
+    console.log("99");
+
     next();
   } catch (error) {
     return sendResponse(res, {
-      message: "",
+      message: "Erreur lors de l'auth",
       httpCode: httpStatus.UNAUTHORIZED,
       errorCode: apiResponseCode.ACTION_UNAUTHORIZED,
     });

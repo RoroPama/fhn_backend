@@ -16,7 +16,10 @@ const createUserWithRole = async (req, res) => {
       data: { userId: user.id, email: user.email, role: user.role },
     });
   } catch (error) {
+    console.log("error");
+
     console.log("Erreur lors de la création du compte:", error);
+    console.error("Erreur lors de la création du compte:", error);
 
     if (error.message === apiResponseCode.EMAIL_ALREADY_EXISTS) {
       return sendResponse(res, {
