@@ -1,6 +1,7 @@
 import express from "express";
 import { schemaValidate } from "../middlewares/validator.js";
 import {
+  addObservationSchema,
   dossier_enfantSchema,
   dossierStatusSchema,
 } from "../framework-core/validators/enfant_dossier.schema.js";
@@ -14,6 +15,13 @@ router.get(
   "/getDossierEnfantOfparent/:parentId",
   verifyToken,
   dossier_enfantController.getDossierEnfantOfparent
+);
+
+router.post(
+  "/addObservation",
+  verifyToken,
+  schemaValidate(addObservationSchema),
+  dossier_enfantController.addObservation
 );
 // Route pour créer un dossier enfant avec upload de fichiers
 router.post(

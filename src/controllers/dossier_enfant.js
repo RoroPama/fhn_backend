@@ -478,9 +478,140 @@ const getDossierEnfantOfparent = async (req, res) => {
   }
 };
 
+const addObservation = async (req, res) => {
+  try {
+    const { dossierId, contenu } = req.body;
+
+    // Récupérer l'ID de l'utilisateur depuis le middleware d'authentification
+    const auteurId = req.user?.userId;
+
+    // Validation des données
+    if (!dossierId) {
+      return sendResponse(res, {
+        httpCode: httpStatus.BAD_REQUEST,
+        message: "L'identifiant du dossier est requis",
+        errorCode: apiResponseCode.VALIDATION_ERROR,
+      });
+    }
+
+    if (!contenu || contenu.trim() === "") {
+      return sendResponse(res, {
+        httpCode: httpStatus.BAD_REQUEST,
+        message: "Le contenu de l'observation est requis",
+        errorCode: apiResponseCode.VALIDATION_ERROR,
+      });
+    }
+
+    if (!auteurId) {
+      return sendResponse(res, {
+        httpCode: httpStatus.UNAUTHORIZED,
+        message: "L'authentification est requise pour ajouter une observation",
+        errorCode: apiResponseCode.UNAUTHORIZED,
+      });
+    }
+
+    // Vérifier que le dossier existe
+    const dossierExists = await prisma.dossier.findUnique({
+      where: { id: dossierId },
+      include: {
+        enfant: {
+          select: {
+            nom: true,
+          },
+        },
+        etablissement: {
+          select: {
+            libelle: true,
+          },
+        },
+      },
+    });
+
+    if (!dossierExists) {
+      return sendResponse(res, {
+        httpCode: httpStatus.NOT_FOUND,
+        message: "Dossier non trouvé",
+        errorCode: apiResponseCode.NOT_FOUND,
+      });
+    }
+
+    // Vérifier le rôle de l'utilisateur
+    const userRole = await userService.getUserRole(auteurId);
+
+    // Vérifier si l'utilisateur a le rôle requis (analyste ou admin)
+    if (userRole !== Constants.userRoles["analyste"]) {
+      return sendResponse(res, {
+        httpCode: httpStatus.FORBIDDEN,
+        message:
+          "Permission refusée. Seuls les analystes et administrateurs peuvent ajouter des observations",
+        errorCode: apiResponseCode.ACCESS_DENIDED,
+      });
+    }
+
+    // Créer l'observation
+    const observation = await prisma.observation.create({
+      data: {
+        dossierId,
+        contenu: contenu.trim(),
+        auteurId,
+      },
+      include: {
+        auteur: {
+          select: {
+            id: true,
+            nom: true,
+            role: true,
+          },
+        },
+        dossier: {
+          select: {
+            id: true,
+            statut_dossier: true,
+            enfant: {
+              select: {
+                nom: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return sendResponse(res, {
+      httpCode: httpStatus.CREATED,
+      message: "Observation ajoutée avec succès",
+      data: {
+        id: observation.id,
+        contenu: observation.contenu,
+        date: observation.date,
+        auteur: {
+          id: observation.auteur.id,
+          nom: observation.auteur.nom,
+          role: observation.auteur.role,
+        },
+        dossier: {
+          id: observation.dossier.id,
+          statut: observation.dossier.statut_dossier,
+          enfantNom: observation.dossier.enfant.nom,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'observation:", error);
+
+    return sendResponse(res, {
+      httpCode: httpStatus.INTERNAL_SERVER_ERROR,
+      message:
+        error.message ||
+        "Une erreur est survenue lors de l'ajout de l'observation",
+      errorCode: apiResponseCode.SERVER_ERROR,
+    });
+  }
+};
 export default {
   soumissionDossierEnfant,
   getAllDossiersEnfants,
   changeDossierState,
   getDossierEnfantOfparent,
+  addObservation,
 };

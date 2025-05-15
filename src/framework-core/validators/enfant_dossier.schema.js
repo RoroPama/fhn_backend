@@ -132,3 +132,19 @@ export const dossier_enfantSchema = Joi.object({
         "filesInfo doit être un tableau valide d'objets avec natureId",
     }),
 });
+
+export const addObservationSchema = Joi.object({
+  dossierId: Joi.string().uuid().required().messages({
+    "string.empty": "L'identifiant du dossier est requis",
+    "string.guid": "L'identifiant du dossier doit être un UUID valide",
+    "any.required": "L'identifiant du dossier est requis",
+  }),
+
+  contenu: Joi.string().min(1).max(5000).trim().required().messages({
+    "string.empty": "Le contenu de l'observation est requis",
+    "string.min": "Le contenu de l'observation ne peut pas être vide",
+    "string.max":
+      "Le contenu de l'observation ne peut pas dépasser 5000 caractères",
+    "any.required": "Le contenu de l'observation est requis",
+  }),
+}).required();
