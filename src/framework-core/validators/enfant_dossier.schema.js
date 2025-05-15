@@ -1,4 +1,22 @@
 import Joi from "joi";
+import Constants from "../../shared/constants.js";
+
+export const dossierStatusSchema = Joi.object({
+  dossierId: Joi.string().uuid().required().messages({
+    "string.empty": "L'ID du dossier est requis",
+    "string.uuid": "L'ID du dossier doit être un UUID valide",
+    "any.required": "L'ID du dossier est requis",
+  }),
+  newStatus: Joi.string()
+    .valid(...Object.values(Constants.statut_dossier))
+    .required()
+    .messages({
+      "string.empty": "Le statut est requis",
+      "any.only":
+        "Le statut doit être l'une des valeurs suivantes: Nouveau, En_cours, Incomplet, Accepte, Rejete, Cloture",
+      "any.required": "Le statut est requis",
+    }),
+});
 
 export const dossier_enfantSchema = Joi.object({
   // Informations de base de l'enfant

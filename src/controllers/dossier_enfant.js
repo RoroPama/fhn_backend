@@ -2,13 +2,12 @@ import prisma from "../db/prisma.js";
 import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
+import userService from "../services/user.service.js";
 import Constants from "../shared/constants.js";
 import fs from "fs";
 
 const soumissionDossierEnfant = async (req, res) => {
   try {
-    const utilisateurId = "0ece4a19-8a18-49ab-82ca-d47b0563222d";
-
     const {
       // Informations de base de l'enfant
       nom,
@@ -266,7 +265,73 @@ const getAllDossiersEnfants = async (req, res) => {
 };
 
 const changeDossierState = async (req, res) => {
-  const { dossierId, newStatus } = req.body;
+  try {
+    const { dossierId, newStatus } = req.body;
+
+    // Récupérer l'ID de l'utilisateur depuis le middleware d'authentification
+    const userId = req.user.userId;
+
+    // Vérifier le rôle de l'utilisateur
+    const userRole = await userService.getUserRole(userId);
+
+    // Vérifier si l'utilisateur a le rôle requis (analyste ou admin)
+    if (userRole !== Constants.userRoles["analyste"]) {
+      return sendResponse(res, {
+        message:
+          "Permission refusée. Seuls les analystes et administrateurs peuvent changer l'état d'un dossier",
+        httpCode: httpStatus.FORBIDDEN,
+        errorCode: apiResponseCode.ACCESS_DENIDED,
+      });
+    }
+
+    // Vérifier que le dossier existe
+    const dossierExists = await prisma.dossier.findUnique({
+      where: { id: dossierId },
+    });
+
+    if (!dossierExists) {
+      return sendResponse(res, {
+        message: "Dossier non trouvé",
+        httpCode: httpStatus.NOT_FOUND,
+        errorCode: apiResponseCode.NOT_FOUND,
+      });
+    }
+
+    // Mettre à jour le statut du dossier
+    const updatedDossier = await prisma.dossier.update({
+      where: { id: dossierId },
+      data: { statut_dossier: newStatus },
+      include: {
+        enfant: {
+          select: {
+            nom: true,
+            parentNom: true,
+            parentEmail: true,
+          },
+        },
+      },
+    });
+
+    // Répondre avec le dossier mis à jour
+    return sendResponse(res, {
+      message: "Statut du dossier mis à jour avec succès",
+      httpCode: httpStatus.OK,
+      data: {
+        id: updatedDossier.id,
+        enfantNom: updatedDossier.enfant.nom,
+        parentNom: updatedDossier.enfant.parentNom,
+        statut: updatedDossier.statut_dossier,
+        etablissement: updatedDossier.etablissementId,
+      },
+    });
+  } catch (error) {
+    console.error("Erreur lors du changement de statut du dossier:", error);
+    return sendResponse(res, {
+      message: "Erreur lors du changement de statut du dossier",
+      httpCode: httpStatus.INTERNAL_SERVER_ERROR,
+      errorCode: apiResponseCode.SERVER_ERROR,
+    });
+  }
 };
 
 export default {
