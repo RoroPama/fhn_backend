@@ -63,7 +63,7 @@ async function sendEmail({ to, subject, text, html }) {
 }
 
 // Template d'email réutilisable
-function createEmailTemplate(title, content, ctaText, ctaLink) {
+function createEmailTemplate(title, content, ctaText, ctaLink, isred) {
   return `
     <!DOCTYPE html>
     <html>
@@ -74,7 +74,9 @@ function createEmailTemplate(title, content, ctaText, ctaLink) {
       <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
+        .header { background-color: :${
+          isred ? "rgb(219, 57, 16)" : "#4CAF50"
+        } color: white; padding: 20px; text-align: center; }
         .content { padding: 20px; background-color: #f9f9f9; }
         .cta-button { 
           display: inline-block; 
@@ -162,11 +164,16 @@ const emailService = {
       .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
       .join("");
 
-    const html = createEmailTemplate(title, htmlMessage, null, null);
+    // Passer le paramètre isred au template pour ajuster la couleur
+    const html = createEmailTemplate(
+      title,
+      htmlMessage,
+      isred ? "red" : "green",
+      null
+    );
 
     return await sendEmail({
       to: userEmail,
-
       subject: title,
       text: message,
       html: html,
