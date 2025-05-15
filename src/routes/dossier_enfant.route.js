@@ -10,6 +10,11 @@ import { verifyToken } from "../middlewares/auth.js";
 
 const router = express.Router();
 
+router.get(
+  "/getDossierEnfantOfparent/:parentId",
+  verifyToken,
+  dossier_enfantController.getDossierEnfantOfparent
+);
 // Route pour créer un dossier enfant avec upload de fichiers
 router.post(
   "/",
@@ -25,12 +30,6 @@ router.patch(
   schemaValidate(dossierStatusSchema),
 
   dossier_enfantController.changeDossierState
-);
-
-router.get(
-  "/:id",
-  verifyToken,
-  dossier_enfantController.getDossierEnfantOfparent
 );
 
 export default router;
