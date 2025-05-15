@@ -10,12 +10,6 @@ const createUserWithRole = async (req, res) => {
     // Créer l'utilisateur
     const user = await authService.createUser(name, email, password, role);
 
-    // Générer le token JWT
-    const token = authService.generateToken(user.id, user.email);
-
-    // Définir le cookie
-    res.cookie("authToken", token, authService.getCookieOptions());
-
     return sendResponse(res, {
       message: "Compte créé avec succès",
       httpCode: httpStatus.CREATED,
