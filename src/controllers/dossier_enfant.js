@@ -2,6 +2,7 @@ import prisma from "../db/prisma.js";
 import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
+import dossierEnfantService from "../services/dossier_enfant.service.js";
 import userService from "../services/user.service.js";
 import Constants from "../shared/constants.js";
 import fs from "fs";
@@ -206,6 +207,7 @@ const getAllDossiersEnfants = async (req, res) => {
         ParcoursMedicalTARII: true,
         ParcoursMedicalWiSi: true,
         etablissement: true,
+        observations: true,
       },
       orderBy: {
         id: "desc", // Trier par ID décroissant
@@ -216,17 +218,26 @@ const getAllDossiersEnfants = async (req, res) => {
     const dossiersFormattees = dossiers.map((dossier) => {
       // Déterminer les observations selon le type de parcours médical
       const observations = [];
+      let parcoursMedical = null;
 
       if (dossier.ParcoursMedicalTARII?.length > 0) {
         const parcours = dossier.ParcoursMedicalTARII[0];
         if (parcours.observation) {
           observations.push(parcours.observation);
         }
+        parcoursMedical = {
+          type: "TARII",
+          data: parcours,
+        };
       } else if (dossier.ParcoursMedicalWiSi?.length > 0) {
         const parcours = dossier.ParcoursMedicalWiSi[0];
         if (parcours.observation) {
           observations.push(parcours.observation);
         }
+        parcoursMedical = {
+          type: "WiSi",
+          data: parcours,
+        };
       }
 
       // Formater les documents
@@ -238,7 +249,7 @@ const getAllDossiersEnfants = async (req, res) => {
         dateUpload: doc.uploadDate || new Date().toISOString(),
       }));
 
-      return {
+      const dossierFormate = {
         id: dossier.id,
         nom: dossier.enfant.nom,
         dateNaissance: dossier.enfant.date_naissance
@@ -246,6 +257,17 @@ const getAllDossiersEnfants = async (req, res) => {
           .split("T")[0],
         sexe: dossier.enfant.sexe,
         commune: dossier.enfant.commune,
+        // Nouvelles données pour le calcul du score
+        est_scolarise: dossier.enfant.est_scolarise,
+        niveau_scolaire: dossier.enfant.niveau_scolaire,
+        ancien_etablissement: dossier.enfant.ancien_etablissement,
+        activites_quotidiennes: dossier.enfant.activites_quotidiennes,
+        parcoursMedical: parcoursMedical,
+        etablissement: {
+          id: dossier.etablissement.id,
+          libelle: dossier.etablissement.libelle,
+        },
+        // Fin des nouvelles données
         parent: {
           nom: dossier.enfant.parentNom,
           telephone: dossier.enfant.parentTelephone,
@@ -257,7 +279,19 @@ const getAllDossiersEnfants = async (req, res) => {
         observations,
         documents,
       };
+
+      // Calculer la note pour ce dossier
+      const note = dossierEnfantService.calculNote(dossierFormate);
+
+      // Ajouter la note au dossier formaté
+      return {
+        ...dossierFormate,
+        note,
+      };
     });
+
+    // Trier les dossiers par note décroissante (les plus désavantagés en premier)
+    dossiersFormattees.sort((a, b) => b.note - a.note);
 
     return sendResponse(res, {
       httpCode: httpStatus.OK,
@@ -266,7 +300,6 @@ const getAllDossiersEnfants = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur lors de la récupération des dossiers:", error);
-
     return sendResponse(res, {
       httpCode: httpStatus.INTERNAL_SERVER_ERROR,
       message: "Une erreur est survenue lors de la récupération des dossiers",
