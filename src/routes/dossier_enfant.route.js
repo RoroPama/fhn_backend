@@ -36,7 +36,7 @@ router.post(
 router.patch(
   "/changeDossierState",
   schemaValidate(dossierStatusSchema),
-
+  verifyToken,
   dossier_enfantController.changeDossierState
 );
 
