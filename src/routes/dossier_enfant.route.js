@@ -27,6 +27,12 @@ router.patch(
   dossier_enfantController.changeDossierState
 );
 
+router.get(
+  "/:id",
+  verifyToken,
+  dossier_enfantController.getDossierEnfantOfparent
+);
+
 export default router;
 
 router.get("/", verifyToken, dossier_enfantController.getAllDossiersEnfants);

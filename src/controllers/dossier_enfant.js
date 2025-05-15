@@ -404,8 +404,11 @@ const changeDossierState = async (req, res) => {
   }
 };
 
+// const getDossierEnfantOfparent=
+
 export default {
   soumissionDossierEnfant,
   getAllDossiersEnfants,
   changeDossierState,
+  getDossierEnfantOfparent,
 };
