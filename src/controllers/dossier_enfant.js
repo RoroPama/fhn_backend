@@ -6,7 +6,7 @@ import dossierEnfantService from "../services/dossier_enfant.service.js";
 import userService from "../services/user.service.js";
 import Constants from "../shared/constants.js";
 import fs from "fs";
-
+import email from "../shared/email.js"; // Assurez-vous d'importer la fonction d'envoi d'email
 const soumissionDossierEnfant = async (req, res) => {
   try {
     const {
@@ -328,9 +328,18 @@ const changeDossierState = async (req, res) => {
       });
     }
 
-    // Vérifier que le dossier existe
+    // Vérifier que le dossier existe avec les informations du parent
     const dossierExists = await prisma.dossier.findUnique({
       where: { id: dossierId },
+      include: {
+        enfant: {
+          select: {
+            nom: true,
+            parentNom: true,
+            parentEmail: true,
+          },
+        },
+      },
     });
 
     if (!dossierExists) {
@@ -355,6 +364,23 @@ const changeDossierState = async (req, res) => {
         },
       },
     });
+
+    // Envoyer un email au parent si le dossier est accepté et que l'email existe
+    if (
+      newStatus === Constants.statut_dossier.Accepte &&
+      updatedDossier.enfant.parentEmail
+    ) {
+      try {
+        email.emailService.sendNotificationEmail(
+          updatedDossier.enfant.parentEmail,
+          "Le Dossier soumis à la FHN a été accepté",
+          `Bonjour ${updatedDossier.enfant.parentNom},\n\nNous avons le plaisir de vous informer que le dossier de ${updatedDossier.enfant.nom} a été accepté.\n\nCordialement,\nL'équipe FHN`
+        );
+      } catch (emailError) {
+        console.error("Erreur lors de l'envoi de l'email:", emailError);
+        // On ne bloque pas la mise à jour du dossier si l'email échoue
+      }
+    }
 
     // Répondre avec le dossier mis à jour
     return sendResponse(res, {

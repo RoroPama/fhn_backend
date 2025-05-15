@@ -1,6 +1,6 @@
 class Constants {
   static userRoles = {
-    secretaire: "secrectaire",
+    secretaire: "secretaire",
     admin: "admin",
     parent: "parent",
     analyste: "analyste",
