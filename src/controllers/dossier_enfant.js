@@ -46,6 +46,17 @@ const soumissionDossierEnfant = async (req, res) => {
       filesInfo, // Array d'objets contenant { natureId } pour chaque fichier
     } = req.body;
 
+    // Récupérer l'utilisateur ID depuis la requête (probablement depuis le middleware d'auth)
+    const utilisateurId = req.user?.userId || req.body.utilisateurId;
+
+    if (!utilisateurId) {
+      return sendResponse(res, {
+        httpCode: httpStatus.BAD_REQUEST,
+        message: "L'identifiant de l'utilisateur est requis",
+        errorCode: apiResponseCode.VALIDATION_ERROR,
+      });
+    }
+
     // Parse filesInfo si c'est une chaîne JSON
     const filesInfoArray =
       typeof filesInfo === "string" ? JSON.parse(filesInfo) : filesInfo;
@@ -86,34 +97,34 @@ const soumissionDossierEnfant = async (req, res) => {
       const dossier = await prisma.dossier.create({
         data: {
           enfantId: enfant.id,
-          statut_dossier: Constants.statut_dossier.nouveau,
+          statut_dossier: "Nouveau", // Utiliser l'enum Statut
           etablissementId: etablissementId.toString(),
         },
       });
 
       // 3. Ajouter le parcours médical selon l'établissement
-      if (etablissementId === 1) {
+      if (etablissementId === 1 || etablissementId === "1") {
         // Parcours TARII
         await prisma.parcoursMedicalTARII.create({
           data: {
-            suivi_orthophonique,
-            suivi_psychologique,
-            psychomotricien,
-            tradipracticien,
+            suivi_orthophonique: Boolean(suivi_orthophonique),
+            suivi_psychologique: Boolean(suivi_psychologique),
+            psychomotricien: Boolean(psychomotricien),
+            tradipracticien: Boolean(tradipracticien),
             attente: attente || "",
             observation: observation || "",
             dossierId: dossier.id,
           },
         });
-      } else if (etablissementId === 2) {
+      } else if (etablissementId === 2 || etablissementId === "2") {
         // Parcours WISI
         await prisma.parcoursMedicalWiSi.create({
           data: {
-            a_consulte_ophtalmo,
-            a_autre_suivi_medical,
+            a_consulte_ophtalmo: Boolean(a_consulte_ophtalmo),
+            a_autre_suivi_medical: Boolean(a_autre_suivi_medical),
             details_suivi_medical: details_suivi_medical || "",
-            a_perception_visuelle,
-            est_aveugle,
+            a_perception_visuelle: Boolean(a_perception_visuelle),
+            est_aveugle: Boolean(est_aveugle),
             attente: attente || "",
             observation: observation || "",
             dossierId: dossier.id,
