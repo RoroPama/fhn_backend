@@ -155,7 +155,7 @@ const emailService = {
   },
 
   // Envoyer un email de notification avec support pour les sauts de ligne
-  async sendNotificationEmail(userEmail, title, message) {
+  async sendNotificationEmail(userEmail, title, message, isred = true) {
     // Convertir les \n en <br> pour le HTML et créer des paragraphes
     const htmlMessage = message
       .split("\n\n")

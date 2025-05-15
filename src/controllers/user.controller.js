@@ -1,3 +1,4 @@
+import prisma from "../db/prisma.js";
 import apiResponseCode from "../framework-core/http/api-response-code.js";
 import httpStatus from "../framework-core/http/http-status.js";
 import sendResponse from "../framework-core/http/response.js";
@@ -31,6 +32,39 @@ const createUserWithRole = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    // Récupérer directement les utilisateurs avec Prisma
+    const users = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ["analyste", "secretaire"],
+        },
+      },
+      select: {
+        id: true,
+        nom: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    return sendResponse(res, {
+      message: "Utilisateurs récupérés avec succès",
+      httpCode: httpStatus.OK,
+      data: users,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la récupération des utilisateurs:", error);
+    return sendResponse(res, {
+      message:
+        "Une erreur est survenue lors de la récupération des utilisateurs",
+      httpCode: httpStatus.INTERNAL_SERVER_ERROR,
+    });
+  }
+};
+
 export default {
   createUserWithRole,
+  getUsers,
 };

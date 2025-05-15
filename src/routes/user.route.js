@@ -16,4 +16,6 @@ router.post(
   userController.createUserWithRole
 );
 
+router.get("/", verifyToken, requireAdmin, userController.getUsers);
+
 export default router;
