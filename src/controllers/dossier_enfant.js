@@ -404,7 +404,91 @@ const changeDossierState = async (req, res) => {
   }
 };
 
-// const getDossierEnfantOfparent=
+const getDossierEnfantOfparent = async (req, res) => {
+  try {
+    const parentId = req.params.id; // L'ID du parent depuis les paramètres de route
+
+    // Vérifier que l'ID du parent existe
+    if (!parentId) {
+      return sendResponse(res, {
+        httpCode: httpStatus.BAD_REQUEST,
+        message: "L'identifiant du parent est requis",
+        errorCode: apiResponseCode.VALIDATION_ERROR,
+      });
+    }
+
+    // Vérifier que l'utilisateur connecté est le parent ou un administrateur
+    const userId = req.user?.userId;
+    if (userId !== parentId) {
+      const userRole = await userService.getUserRole(userId);
+      if (userRole !== Constants.userRoles["admin"]) {
+        return sendResponse(res, {
+          httpCode: httpStatus.FORBIDDEN,
+          message: "Vous n'êtes pas autorisé à accéder à ces informations",
+          errorCode: apiResponseCode.ACCESS_DENIDED,
+        });
+      }
+    }
+
+    // Récupérer les enfants et leurs dossiers associés pour ce parent
+    const enfants = await prisma.enfant.findMany({
+      where: {
+        utilisateurId: parentId,
+      },
+      select: {
+        id: true,
+        nom: true,
+        sexe: true,
+        dossier: {
+          select: {
+            id: true,
+            statut_dossier: true,
+            etablissementId: true,
+            etablissement: {
+              select: {
+                libelle: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Formater les données pour le retour
+    const enfantsFormates = enfants.map((enfant) => {
+      // Pour chaque enfant, récupérer les informations de son/ses dossier(s)
+      const dossiers = enfant.dossier.map((dossier) => ({
+        dossier_id: dossier.id,
+        etablissement_id: dossier.etablissementId,
+        etablissement_libelle: dossier.etablissement.libelle,
+        statut_dossier: dossier.statut_dossier,
+      }));
+
+      return {
+        enfant_id: enfant.id,
+        nom: enfant.nom,
+        sexe: enfant.sexe,
+        dossiers: dossiers,
+      };
+    });
+
+    return sendResponse(res, {
+      httpCode: httpStatus.OK,
+      message: "Données des enfants récupérées avec succès",
+      data: enfantsFormates,
+    });
+  } catch (error) {
+    console.error(
+      "Erreur lors de la récupération des dossiers enfants:",
+      error
+    );
+    return sendResponse(res, {
+      httpCode: httpStatus.INTERNAL_SERVER_ERROR,
+      message: "Une erreur est survenue lors de la récupération des dossiers",
+      errorCode: apiResponseCode.SERVER_ERROR,
+    });
+  }
+};
 
 export default {
   soumissionDossierEnfant,
